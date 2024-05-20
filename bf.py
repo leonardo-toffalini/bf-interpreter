@@ -1,5 +1,5 @@
-from icecream import ic
 from enum import Enum, auto
+import sys
 
 
 class TokenType(Enum):
@@ -65,48 +65,62 @@ def read_tokens(file_path):
 
 def cross_reference_porgram(tokens):
     index = 0
-    pos_of_lbracket = -1
+    bracket_stack = []
     while index < len(tokens):
         token = tokens[index]
         if token.ttype == TokenType.lbracket:
-            pos_of_lbracket = index
+            bracket_stack.append(index)
         if token.ttype == TokenType.rbracket:
-            token.address = pos_of_lbracket
-            tokens[pos_of_lbracket].address = index
+            prev_lbracket_pos = bracket_stack.pop()
+            token.address = prev_lbracket_pos
+            tokens[prev_lbracket_pos].address = index
         index += 1
 
 
 def simulate_program(tokens):
     byte_array_size = 30_000
-    byte_array = bytearray(byte_array_size)
+    byte_array = [0] * byte_array_size
     reader_pos = 0
 
-    for token in tokens:
+    index = 0
+    while index < len(tokens):
+        if "-debug" in sys.argv:
+            print("byte_array[:10] = ", list(byte_array[:10]))
+        token = tokens[index]
         if token.ttype == TokenType.increment:
             reader_pos += 1
+            index += 1
         if token.ttype == TokenType.decrement:
             reader_pos -= 1
+            index += 1
         if token.ttype == TokenType.plus:
             byte_array[reader_pos] += 1
+            index += 1
         if token.ttype == TokenType.minus:
             byte_array[reader_pos] -= 1
+            index += 1
         if token.ttype == TokenType.dot:
-            print(byte_array[reader_pos])
+            print(chr(byte_array[reader_pos]), end="")
+            index += 1
         if token.ttype == TokenType.comma:
             raise NotImplementedError
         if token.ttype == TokenType.lbracket:
-            raise NotImplementedError
+            if byte_array[reader_pos] == 0:
+                index = token.address + 1
+            else:
+                index += 1
+
         if token.ttype == TokenType.rbracket:
-            raise NotImplementedError
+            index = token.address
+
+    # ic(byte_array[:20])
 
 
 def main():
-    file_path = "example.bf"
+    file_path = sys.argv[1]
     tokens = read_tokens(file_path)
-    ic(tokens)
     cross_reference_porgram(tokens)
-    ic(tokens)
-    # simulate_program(tokens)
+    simulate_program(tokens)
 
 
 if __name__ == "__main__":
