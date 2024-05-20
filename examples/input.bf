@@ -1,4 +1,3 @@
-This program reads in 6 bytes and outputs them consecutively
 ++ [>+++<-]     c0 = 0 c1 = 6
 >
 [

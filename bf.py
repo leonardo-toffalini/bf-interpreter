@@ -110,17 +110,17 @@ def simulate_program(tokens):
             reader_pos -= 1
             index += 1
         if token.ttype == TokenType.plus:
-            byte_array[reader_pos] += 1
+            byte_array[reader_pos] = (byte_array[reader_pos] + 1) % 256
             index += 1
         if token.ttype == TokenType.minus:
-            byte_array[reader_pos] -= 1
+            byte_array[reader_pos] = (byte_array[reader_pos] - 1) % 256
             index += 1
         if token.ttype == TokenType.dot:
             print(chr(byte_array[reader_pos]), end="")
             index += 1
         if token.ttype == TokenType.comma:
-            x = ord(input())
-            byte_array[reader_pos] = x
+            x = sys.stdin.read(1)
+            byte_array[reader_pos] = (ord(x) if x else 0) % 256
             index += 1
         if token.ttype == TokenType.lbracket:
             if byte_array[reader_pos] == 0:
