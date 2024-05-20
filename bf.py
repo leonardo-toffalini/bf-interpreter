@@ -59,6 +59,8 @@ def read_tokens(file_path):
                 index += 1
             else:
                 assert False, "Unexpected token in read_tokens()"
+        else:
+            pass  # comments
 
     return tokens
 
@@ -77,6 +79,20 @@ def cross_reference_porgram(tokens):
         index += 1
 
 
+def pretty_print_byte_array(array, reader_pos, size=10):
+    pos = 1
+    for i in range(size):
+        if i == reader_pos:
+            print(f"\033[1;31m[{array[i]}]\033[0m", end="")
+        else:
+            print(f"[{array[i]}]", end="")
+
+        if i < reader_pos:
+            pos += 2 + len(str(array[i]))
+
+    print("\n" + (" " * pos) + "\033[0;32m^\033[0m")
+
+
 def simulate_program(tokens):
     byte_array_size = 30_000
     byte_array = [0] * byte_array_size
@@ -85,7 +101,7 @@ def simulate_program(tokens):
     index = 0
     while index < len(tokens):
         if "-debug" in sys.argv:
-            print("byte_array[:10] = ", list(byte_array[:10]))
+            pretty_print_byte_array(byte_array, reader_pos)
         token = tokens[index]
         if token.ttype == TokenType.increment:
             reader_pos += 1
@@ -103,7 +119,9 @@ def simulate_program(tokens):
             print(chr(byte_array[reader_pos]), end="")
             index += 1
         if token.ttype == TokenType.comma:
-            raise NotImplementedError
+            x = ord(input())
+            byte_array[reader_pos] = x
+            index += 1
         if token.ttype == TokenType.lbracket:
             if byte_array[reader_pos] == 0:
                 index = token.address + 1
