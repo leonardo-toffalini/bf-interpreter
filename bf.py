@@ -119,8 +119,8 @@ def simulate_program(tokens):
             print(chr(byte_array[reader_pos]), end="")
             index += 1
         if token.ttype == TokenType.comma:
-            x = sys.stdin.read(1)
-            byte_array[reader_pos] = (ord(x) if x else 0) % 256
+            x = ord(sys.stdin.read(1)) % 256
+            byte_array[reader_pos] = x
             index += 1
         if token.ttype == TokenType.lbracket:
             if byte_array[reader_pos] == 0:
