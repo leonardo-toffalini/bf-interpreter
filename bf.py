@@ -95,7 +95,7 @@ def pretty_print_byte_array(array, reader_pos, size):
 
 def simulate_program(tokens, debug=0):
     byte_array_size = 30_000
-    byte_array = [0] * byte_array_size
+    byte_array = bytearray(byte_array_size)
     reader_pos = 0
 
     index = 0
@@ -133,20 +133,30 @@ def simulate_program(tokens, debug=0):
             index = token.address
 
 
+def print_usage():
+    print("Usage:")
+    print("\tProvide the path of the programan to simulate.")
+    print("\tFor example:")
+    print("\t\t```$ python3 bf.py example/hello_world.bf```\n")
+    print("\tAdditionally, you can enable debug mode with the `-debug=n` flag,")
+    print("\twhere n is the number of cells from the byte array to print")
+    print("\tFor example:")
+    print("\t\t```$ python3 bf.py example/hello_world.bf -debug=10```\n")
+
+
 def main():
     if len(sys.argv) < 2:
-        print("Usage:")
-        print("\tProvide the path of the programan to simulate.")
-        print("\tFor example:")
-        print("\t\t```$ python3 bf.py example/hello_world.bf```\n")
-        print("\tAdditionally, you can enable debug mode with the `-debug=n` flag,")
-        print("\twhere n is the number of cells from the byte array to print")
-        print("\tFor example:")
-        print("\t\t```$ python3 bf.py example/hello_world.bf -debug=10```\n")
+        print_usage()
         exit(1)
 
     file_path = sys.argv[1]
-    debug = int(sys.argv[2].split("=")[-1])
+    debug = 0
+
+    if len(sys.argv) == 3:
+        debug = int(sys.argv[2].split("=")[-1])
+    elif len(sys.argv) > 3:
+        print_usage()
+
     tokens = read_tokens(file_path)
     cross_reference_porgram(tokens)
     simulate_program(tokens, debug)
