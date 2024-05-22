@@ -23,7 +23,7 @@ $ python3 bf.py examples/hello_world.bf
 
 You can even see what the byte array looks like at each step by running the program with the `-debug` flag like this:
 ```console
-$ python3 bf.py examples/hello_world.bf -debug
+$ python3 bf.py examples/hello_world.bf -debug=10
 ```
 
 ### Where next?
