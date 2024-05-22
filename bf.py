@@ -1,5 +1,6 @@
 from enum import Enum, auto
 import sys
+import subprocess
 
 # from icecream import ic
 
@@ -156,37 +157,89 @@ def simulate_program(tokens, debug=0):
 
 
 def transpile_program(tokens):
-    pass
+    with open("out.c", "w") as f:
+        f.write("#include <stdio.h>\n\n")
+        f.write("int main(void) {\n")
+        f.write("\tint byte_array[100];\n")
+        f.write("\tint reader_pos = 0;\n")
+
+        index = 0
+
+        while index < len(tokens):
+            token = tokens[index]
+
+            if token.ttype == TokenType.increment:
+                f.write(f"\treader_pos += {token.value};\n")
+                index += 1
+            if token.ttype == TokenType.decrement:
+                f.write(f"\treader_pos -= {token.value};\n")
+                index += 1
+            if token.ttype == TokenType.plus:
+                f.write(
+                    f"\tbyte_array[reader_pos] = (byte_array[reader_pos] + {token.value}) % 256;\n"
+                )
+                index += 1
+            if token.ttype == TokenType.minus:
+                f.write(
+                    f"\tbyte_array[reader_pos] = (byte_array[reader_pos] - {token.value}) % 256;\n"
+                )
+                index += 1
+            if token.ttype == TokenType.dot:
+                f.write('\tprintf("%c", byte_array[reader_pos]);\n')
+                index += 1
+            if token.ttype == TokenType.comma:
+                f.write('\tscanf("%d", byte_array[reader_pos]);\n')
+            if token.ttype == TokenType.lbracket:
+                f.write("\twhile (byte_array[reader_pos]) {\n")
+                index += 1
+
+            if token.ttype == TokenType.rbracket:
+                f.write("\t}\n")
+                index += 1
+
+        f.write("}")
 
 
 def print_usage():
     print("Usage:")
-    print("\tProvide the path of the programan to simulate.")
+    print("\tProvide the path of the programan and the mode (sim, trans, comp).")
     print("\tFor example:")
-    print("\t\t```$ python3 bf.py example/hello_world.bf```\n")
+    print("\t\t```$ python3 bf.py sim example/hello_world.bf```\n")
     print("\tAdditionally, you can enable debug mode with the `-debug=n` flag,")
     print("\twhere n is the number of cells from the byte array to print")
     print("\tFor example:")
-    print("\t\t```$ python3 bf.py example/hello_world.bf -debug=10```\n")
+    print("\t\t```$ python3 bf.py comp example/hello_world.bf -debug=10```\n")
 
 
 def main():
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 3 or len(sys.argv) > 4:
         print_usage()
         exit(1)
 
-    file_path = sys.argv[1]
+    file_path = ""
     debug = 0
 
-    if len(sys.argv) == 3:
-        debug = int(sys.argv[2].split("=")[-1])
-    elif len(sys.argv) > 3:
-        print_usage()
+    for arg in sys.argv:
+        if "debug" in arg:
+            debug = int(arg.split("=")[-1])
+        if ".bf" in arg:
+            file_path = arg
+    assert len(file_path) > 0, "Please provide a file path."
 
     tokens = read_tokens(file_path)
     collapse_runs(tokens)
     cross_reference_porgram(tokens)
-    simulate_program(tokens, debug)
+
+    if "sim" in sys.argv:
+        simulate_program(tokens, debug)
+
+    if "trans" in sys.argv:
+        transpile_program(tokens)
+
+    if "comp" in sys.argv:
+        transpile_program(tokens)
+        subprocess.run(["clang", "out.c"])
+        subprocess.run(["rm", "out.c"])
 
 
 if __name__ == "__main__":
