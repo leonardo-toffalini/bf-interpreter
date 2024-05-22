@@ -1,6 +1,8 @@
 from enum import Enum, auto
 import sys
 
+# from icecream import ic
+
 
 class TokenType(Enum):
     increment = auto()
@@ -14,15 +16,14 @@ class TokenType(Enum):
 
 
 class Token:
-    def __init__(self, ttype, pos, address=None):
+    def __init__(self, ttype, pos, address=None, value=None):
         self.ttype = ttype
         self.pos = pos
         self.address = address
+        self.value = value  # indicates how many of them are in a row for tokens ><+-
 
     def __repr__(self):
-        return (
-            f"Token(TokneType: {self.ttype}, pos: {self.pos}, address: {self.address})"
-        )
+        return f"Token(TokneType: {self.ttype}, pos: {self.pos}, address: {self.address}, value: {self.value})"
 
 
 def read_tokens(file_path):
@@ -34,16 +35,16 @@ def read_tokens(file_path):
     for char in raw:
         if char in "><+-.,[]":
             if char == ">":
-                tokens.append(Token(TokenType.increment, index))
+                tokens.append(Token(TokenType.increment, index, value=1))
                 index += 1
             elif char == "<":
-                tokens.append(Token(TokenType.decrement, index))
+                tokens.append(Token(TokenType.decrement, index, value=1))
                 index += 1
             elif char == "+":
-                tokens.append(Token(TokenType.plus, index))
+                tokens.append(Token(TokenType.plus, index, value=1))
                 index += 1
             elif char == "-":
-                tokens.append(Token(TokenType.minus, index))
+                tokens.append(Token(TokenType.minus, index, value=1))
                 index += 1
             elif char == ".":
                 tokens.append(Token(TokenType.dot, index))
@@ -63,6 +64,27 @@ def read_tokens(file_path):
             pass  # comments
 
     return tokens
+
+
+def collapse_runs(tokens):
+    i = 0
+    while i < len(tokens):
+        current_token = tokens[i]
+
+        if current_token.ttype not in [
+            TokenType.increment,
+            TokenType.decrement,
+            TokenType.plus,
+            TokenType.minus,
+        ]:
+            i += 1
+            continue
+
+        j = i + 1
+        while j < len(tokens) and tokens[j].ttype == current_token.ttype:
+            current_token.value += 1
+            tokens.pop(j)
+        i += 1
 
 
 def cross_reference_porgram(tokens):
@@ -105,16 +127,16 @@ def simulate_program(tokens, debug=0):
 
         token = tokens[index]
         if token.ttype == TokenType.increment:
-            reader_pos += 1
+            reader_pos += token.value
             index += 1
         if token.ttype == TokenType.decrement:
-            reader_pos -= 1
+            reader_pos -= token.value
             index += 1
         if token.ttype == TokenType.plus:
-            byte_array[reader_pos] = (byte_array[reader_pos] + 1) % 256
+            byte_array[reader_pos] = (byte_array[reader_pos] + token.value) % 256
             index += 1
         if token.ttype == TokenType.minus:
-            byte_array[reader_pos] = (byte_array[reader_pos] - 1) % 256
+            byte_array[reader_pos] = (byte_array[reader_pos] - token.value) % 256
             index += 1
         if token.ttype == TokenType.dot:
             print(chr(byte_array[reader_pos]), end="")
@@ -131,6 +153,10 @@ def simulate_program(tokens, debug=0):
 
         if token.ttype == TokenType.rbracket:
             index = token.address
+
+
+def transpile_program(tokens):
+    pass
 
 
 def print_usage():
@@ -158,6 +184,7 @@ def main():
         print_usage()
 
     tokens = read_tokens(file_path)
+    collapse_runs(tokens)
     cross_reference_porgram(tokens)
     simulate_program(tokens, debug)
 
