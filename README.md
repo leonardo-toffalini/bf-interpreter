@@ -16,15 +16,35 @@ The following are the only operations allowed in Brainfuck, every othern charact
 *Note:* The input and output in Brainfuck is ASCII encoded, so if you want to write and 'a' you have to write *97*.
 
 ### Quickstart
+Currently, three main features are supported:
+- Simulation (`sim`)
+    Simulation mode directly interprets the Brainfuck program in python.
+
+- Transiplation (`trans`)
+    Transiplation mode lexes the Brainfuck program into tokens, then translates the tokens into C code.
+
+- Compilation (`comp`)
+    Compilation mode first transpiles the Brainfuck program, then calls a C compiler to generate an executeable.
+
 Try out some of the examples in the *examples/* directory by running the following command in your terminal:
 ```console
-$ python3 bf.py examples/hello_world.bf
+$ python3 bf.py sim examples/hello_world.bf
 ```
 
 You can even see what the byte array looks like at each step by running the program with the `-debug` flag like this:
 ```console
-$ python3 bf.py examples/hello_world.bf -debug=10
+$ python3 bf.py sim examples/hello_world.bf -debug=10
 ```
 
+### Time comparisons
+The following tests are based on the `examples/mandel.bf` program, which outputs a low resolution ASCII image of the [Mandelbrot set](https://en.wikipedia.org/wiki/Mandelbrot_set).
+
+Times:
+- Simulation mode: *~70 minutes*
+- Compilation mode without optimization: *~26 seconds*
+- Compilation mode with little optimization: *~2.4 seconds*
+- Compilation mode with more optimization: *~0.005 seconds*
+
+
 ### Where next?
-The next step is to have the option to compile to x86-64 assembly.
+The next step is to have the option to directly compile to x86-64 or arm64 assembly.

@@ -243,7 +243,7 @@ def main():
 
     if "comp" in sys.argv:
         transpile_program(tokens)
-        subprocess.run(["clang", "out.c"])
+        subprocess.run(["clang", "out.c", "-O3"])
         subprocess.run(["rm", "out.c"])
 
 
