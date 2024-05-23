@@ -158,43 +158,49 @@ def simulate_program(tokens, debug=0):
 
 def transpile_program(tokens):
     with open("out.c", "w") as f:
+
         f.write("#include <stdio.h>\n\n")
         f.write("int main(void) {\n")
-        f.write("\tint byte_array[100];\n")
+        f.write("\tint byte_array[100000];\n")
         f.write("\tint reader_pos = 0;\n")
 
         index = 0
+        indent_level = 1
 
         while index < len(tokens):
             token = tokens[index]
 
             if token.ttype == TokenType.increment:
-                f.write(f"\treader_pos += {token.value};\n")
+                f.write("\t" * indent_level + f"reader_pos += {token.value};\n")
                 index += 1
             if token.ttype == TokenType.decrement:
-                f.write(f"\treader_pos -= {token.value};\n")
+                f.write("\t" * indent_level + f"reader_pos -= {token.value};\n")
                 index += 1
             if token.ttype == TokenType.plus:
                 f.write(
-                    f"\tbyte_array[reader_pos] = (byte_array[reader_pos] + {token.value}) % 256;\n"
+                    "\t" * indent_level
+                    + f"byte_array[reader_pos] = (byte_array[reader_pos] + {token.value}) % 256;\n"
                 )
                 index += 1
             if token.ttype == TokenType.minus:
                 f.write(
-                    f"\tbyte_array[reader_pos] = (byte_array[reader_pos] - {token.value}) % 256;\n"
+                    "\t" * indent_level
+                    + f"byte_array[reader_pos] = (byte_array[reader_pos] - {token.value}) % 256;\n"
                 )
                 index += 1
             if token.ttype == TokenType.dot:
-                f.write('\tprintf("%c", byte_array[reader_pos]);\n')
+                f.write("\t" * indent_level + 'printf("%c", byte_array[reader_pos]);\n')
                 index += 1
             if token.ttype == TokenType.comma:
-                f.write('\tscanf("%d", byte_array[reader_pos]);\n')
+                f.write("\t" * indent_level + 'scanf("%d", byte_array[reader_pos]);\n')
             if token.ttype == TokenType.lbracket:
-                f.write("\twhile (byte_array[reader_pos]) {\n")
+                f.write("\t" * indent_level + "while (byte_array[reader_pos]) {\n")
+                indent_level += 1
                 index += 1
 
             if token.ttype == TokenType.rbracket:
-                f.write("\t}\n")
+                indent_level -= 1
+                f.write("\t" * indent_level + "}\n")
                 index += 1
 
         f.write("}")
@@ -214,7 +220,6 @@ def print_usage():
 def main():
     if len(sys.argv) < 3 or len(sys.argv) > 4:
         print_usage()
-        exit(1)
 
     file_path = ""
     debug = 0
