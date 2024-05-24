@@ -34,35 +34,33 @@ def read_tokens(file_path):
     tokens = []
     index = 0
     for char in raw:
-        if char in "><+-.,[]":
-            if char == ">":
+        match char:
+            case ">":
                 tokens.append(Token(TokenType.increment, index, value=1))
                 index += 1
-            elif char == "<":
+            case "<":
                 tokens.append(Token(TokenType.decrement, index, value=1))
                 index += 1
-            elif char == "+":
+            case "+":
                 tokens.append(Token(TokenType.plus, index, value=1))
                 index += 1
-            elif char == "-":
+            case "-":
                 tokens.append(Token(TokenType.minus, index, value=1))
                 index += 1
-            elif char == ".":
+            case ".":
                 tokens.append(Token(TokenType.dot, index))
                 index += 1
-            elif char == ",":
+            case ",":
                 tokens.append(Token(TokenType.comma, index))
                 index += 1
-            elif char == "[":
+            case "[":
                 tokens.append(Token(TokenType.lbracket, index))
                 index += 1
-            elif char == "]":
+            case "]":
                 tokens.append(Token(TokenType.rbracket, index))
                 index += 1
-            else:
-                assert False, "Unexpected token in read_tokens()"
-        else:
-            pass  # comments
+            case _:
+                pass  # all other characters are considered comment
 
     return tokens
 
@@ -127,33 +125,36 @@ def simulate_program(tokens, debug=0):
             pretty_print_byte_array(byte_array, reader_pos, debug)
 
         token = tokens[index]
-        if token.ttype == TokenType.increment:
-            reader_pos += token.value
-            index += 1
-        if token.ttype == TokenType.decrement:
-            reader_pos -= token.value
-            index += 1
-        if token.ttype == TokenType.plus:
-            byte_array[reader_pos] = (byte_array[reader_pos] + token.value) % 256
-            index += 1
-        if token.ttype == TokenType.minus:
-            byte_array[reader_pos] = (byte_array[reader_pos] - token.value) % 256
-            index += 1
-        if token.ttype == TokenType.dot:
-            print(chr(byte_array[reader_pos]), end="")
-            index += 1
-        if token.ttype == TokenType.comma:
-            x = ord(sys.stdin.read(1)) % 256
-            byte_array[reader_pos] = x
-            index += 1
-        if token.ttype == TokenType.lbracket:
-            if byte_array[reader_pos] == 0:
-                index = token.address + 1
-            else:
-                index += 1
 
-        if token.ttype == TokenType.rbracket:
-            index = token.address
+        match token.ttype:
+            case TokenType.increment:
+                reader_pos += token.value
+                index += 1
+            case TokenType.decrement:
+                reader_pos -= token.value
+                index += 1
+            case TokenType.plus:
+                byte_array[reader_pos] = (byte_array[reader_pos] + token.value) % 256
+                index += 1
+            case TokenType.minus:
+                byte_array[reader_pos] = (byte_array[reader_pos] - token.value) % 256
+                index += 1
+            case TokenType.dot:
+                print(chr(byte_array[reader_pos]), end="")
+                index += 1
+            case TokenType.comma:
+                x = ord(sys.stdin.read(1)) % 256
+                byte_array[reader_pos] = x
+                index += 1
+            case TokenType.lbracket:
+                if byte_array[reader_pos] == 0:
+                    index = token.address + 1
+                else:
+                    index += 1
+            case TokenType.rbracket:
+                index = token.address
+            case _:
+                assert False, "Unexpected token type in simulate_program"
 
 
 def transpile_program(tokens):
@@ -164,44 +165,40 @@ def transpile_program(tokens):
         f.write("\tint byte_array[100000];\n")
         f.write("\tint reader_pos = 0;\n")
 
-        index = 0
         indent_level = 1
 
-        while index < len(tokens):
-            token = tokens[index]
-
-            if token.ttype == TokenType.increment:
-                f.write("\t" * indent_level + f"reader_pos += {token.value};\n")
-                index += 1
-            if token.ttype == TokenType.decrement:
-                f.write("\t" * indent_level + f"reader_pos -= {token.value};\n")
-                index += 1
-            if token.ttype == TokenType.plus:
-                f.write(
-                    "\t" * indent_level
-                    + f"byte_array[reader_pos] = (byte_array[reader_pos] + {token.value}) % 256;\n"
-                )
-                index += 1
-            if token.ttype == TokenType.minus:
-                f.write(
-                    "\t" * indent_level
-                    + f"byte_array[reader_pos] = (byte_array[reader_pos] - {token.value}) % 256;\n"
-                )
-                index += 1
-            if token.ttype == TokenType.dot:
-                f.write("\t" * indent_level + 'printf("%c", byte_array[reader_pos]);\n')
-                index += 1
-            if token.ttype == TokenType.comma:
-                f.write("\t" * indent_level + 'scanf("%d", byte_array[reader_pos]);\n')
-            if token.ttype == TokenType.lbracket:
-                f.write("\t" * indent_level + "while (byte_array[reader_pos]) {\n")
-                indent_level += 1
-                index += 1
-
-            if token.ttype == TokenType.rbracket:
-                indent_level -= 1
-                f.write("\t" * indent_level + "}\n")
-                index += 1
+        for token in tokens:
+            match token.ttype:
+                case TokenType.increment:
+                    f.write("\t" * indent_level + f"reader_pos += {token.value};\n")
+                case TokenType.decrement:
+                    f.write("\t" * indent_level + f"reader_pos -= {token.value};\n")
+                case TokenType.plus:
+                    f.write(
+                        "\t" * indent_level
+                        + f"byte_array[reader_pos] = (byte_array[reader_pos] + {token.value}) % 256;\n"
+                    )
+                case TokenType.minus:
+                    f.write(
+                        "\t" * indent_level
+                        + f"byte_array[reader_pos] = (byte_array[reader_pos] - {token.value}) % 256;\n"
+                    )
+                case TokenType.dot:
+                    f.write(
+                        "\t" * indent_level + 'printf("%c", byte_array[reader_pos]);\n'
+                    )
+                case TokenType.comma:
+                    f.write(
+                        "\t" * indent_level + 'scanf("%d", byte_array[reader_pos]);\n'
+                    )
+                case TokenType.lbracket:
+                    f.write("\t" * indent_level + "while (byte_array[reader_pos]) {\n")
+                    indent_level += 1
+                case TokenType.rbracket:
+                    indent_level -= 1
+                    f.write("\t" * indent_level + "}\n")
+                case _:
+                    assert False, "Unexpected token type in transpile_program"
 
         f.write("}")
 
@@ -238,13 +235,16 @@ def main():
     if "sim" in sys.argv:
         simulate_program(tokens, debug)
 
-    if "trans" in sys.argv:
+    elif "trans" in sys.argv:
         transpile_program(tokens)
 
-    if "comp" in sys.argv:
+    elif "comp" in sys.argv:
         transpile_program(tokens)
-        subprocess.run(["clang", "out.c", "-O3"])
+        subprocess.run(["clang", "out.c"])
         subprocess.run(["rm", "out.c"])
+
+    else:
+        print_usage()
 
 
 if __name__ == "__main__":
