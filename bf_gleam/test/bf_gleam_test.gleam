@@ -51,6 +51,7 @@ pub fn read_file_test() {
 }
 
 pub fn lex_file_test() {
+  // contents: ++ > ++++++
   let filepath = "examples/two_five.bf"
   lexer.lex(filepath)
   |> should.equal([
@@ -64,3 +65,23 @@ pub fn lex_file_test() {
     Token(token.Plus, 7, -1, 1),
   ])
 }
+
+pub fn cross_ref_test() {
+  // contents: [+[--<][]]
+  let filepath = "examples/brackets.bf"
+  let tokens = lexer.lex(filepath)
+  lexer.cross_reference_tokens(tokens)
+  |> should.equal([
+    Token(token.Lbracket, 0, 9, 1),
+    Token(token.Plus, 1, -1, 1),
+    Token(token.Lbracket, 2, 6, 1),
+    Token(token.Minus, 3, -1, 1),
+    Token(token.Minus, 4, -1, 1),
+    Token(token.Decrement, 5, -1, 1),
+    Token(token.Rbracket, 6, 2, 1),
+    Token(token.Lbracket, 7, 8, 1),
+    Token(token.Rbracket, 8, 7, 1),
+    Token(token.Rbracket, 9, 0, 1),
+  ])
+}
+
