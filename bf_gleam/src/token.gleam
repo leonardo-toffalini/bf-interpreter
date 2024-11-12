@@ -1,5 +1,5 @@
-import gleam/io
 import gleam/int
+import gleam/io
 
 pub type TokenType {
   Increment
@@ -13,17 +13,12 @@ pub type TokenType {
 }
 
 pub type Token {
-  Token(
-  token_type: TokenType,
-  position: Int,
-  address: Int,
-  value: Int
-)
+  Token(token_type: TokenType, position: Int, address: Int, value: Int)
 }
 
 pub fn token_to_string(t: Token) -> String {
-  "Token(type: " <>
-  case t.token_type {
+  "Token(type: "
+  <> case t.token_type {
     Increment -> "increment"
     Decrement -> "decrement"
     Plus -> "plus"
@@ -33,9 +28,12 @@ pub fn token_to_string(t: Token) -> String {
     Lbracket -> "lbracket"
     Rbracket -> "rbracket"
   }
-  <> ", position: " <> int.to_string(t.position)
-  <> ", address: " <> int.to_string(t.address)
-  <> ", value: " <> int.to_string(t.value)
+  <> ", position: "
+  <> int.to_string(t.position)
+  <> ", address: "
+  <> int.to_string(t.address)
+  <> ", value: "
+  <> int.to_string(t.value)
   <> ")"
 }
 
